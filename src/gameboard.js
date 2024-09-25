@@ -32,7 +32,7 @@ export default function Gameboard() {
         }
 
         const flattenShips = shipsCoords.reduce((next, current) => {
-            next.push(current.coordinates);
+            next.push([current.coordinates, current.ship.isSunk()]);
             return next;
         }, []);
 

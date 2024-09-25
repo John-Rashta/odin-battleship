@@ -36,7 +36,7 @@ test("get ship hits properly", () => {
 test("get ship coords properly", () => {
     const newBoard = Gameboard();
     newBoard.setup([[[2, 3],[2, 4],[2, 5]]]);
-    expect(newBoard.getShips()).toEqual([[[2, 3],[2, 4],[2, 5]]]);
+    expect(newBoard.getShips()).toEqual([[[[2, 3],[2, 4],[2, 5]], false]]);
 })
 
 test("adds 2 ships and sinks them properly", () => {
