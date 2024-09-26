@@ -13,7 +13,7 @@ export default function SetupDom() {
         return isEmpty;
     }
 
-    const helperGetShipCoords = function getShipsCoordsFromDom({headCoord, direction, size}) {
+    const helperGetShipCoords = function getShipsCoordsFromDom(headCoord, direction, size) {
         const shipArray = [headCoord];
 
         if (direction === "h") {
@@ -38,6 +38,7 @@ export default function SetupDom() {
             for (let j = 0; j < 10; j++) {
               const temp = document.createElement("div");
               temp.classList.toggle("cell");
+              temp.classList.toggle("empty");
               temp.dataset.y = i;
               temp.dataset.x = j;
               container.appendChild(temp);
@@ -51,11 +52,88 @@ export default function SetupDom() {
 
     }
 
-    const setupPlayerBoard = function setupPlayerBoardOnDom() {
+    const setupPlayerBoard = function setupPlayerBoardOnDom(missedHits, shipHits, shipCoords) {
+        const playerField = document.querySelector(".playerField");
+        if (playerField.firstChild) {
+            playerField.removeChild(playerField.firstChild);
+        }
+
+        helperAddGrid(playerField);
+
+        missedHits.forEach((hit) => {
+            const currentCell = document.querySelector(`.cell[data-y="${hit[0]}"][data-x="${hit[1]}"]`);
+            currentCell.classList.toggle("miss");
+            currentCell.classList.toggle("empty");
+        });
+
+        shipHits.forEach((hit) => {
+            const currentCell = document.querySelector(`.cell[data-y="${hit[0]}"][data-x="${hit[1]}"]`);
+            currentCell.classList.toggle("hit");
+        });
+
+        shipCoords.forEach((ship) => {
+            const firstCoord = ship[0][0][0];
+            const secondCoord = ship[0][0][1];
+            let direction;
+            if (firstCoord[0] === secondCoord[0]) {
+                direction = "h";
+            } else if (firstCoord[1] === secondCoord[1]) {
+                direction = "v";
+            }
+            const shipHead = document.querySelector(`.cell[data-y="${firstCoord[0]}"][data-x="${firstCoord[1]}"]`);
+            const shipLength = ship[0][0].length;
+            const sunked = ship[0][1];
+
+            const shipDiv = document.createElement("div");
+            shipDiv.classList.toggle("ship");
+            shipDiv.dataset.size = shipLength;
+            shipDiv.dataset.direction = direction;
+            if (sunked) {
+                shipDiv.classList.toggle("sunk");
+            }
+
+            if (direction === "h") {
+                shipDiv.style.height = "100%";
+                shipDiv.style.width = (100 * shipLength) + "%";
+
+            } else if (direction === "v") {
+                shipDiv.style.width = "100%";
+                shipDiv.style.height = (100 * shipLength) + "%";
+
+            }
+
+            ship[0][0].forEach((coord) => {
+                const currentCell = document.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
+                currentCell.classList.toggle("empty");
+                currentCell.classList.toggle("full");
+            });
+
+            shipHead.appendChild(shipDiv);
+        });
 
     }
 
-    const setupOpponentBoard = function setupOpponentBoardOnDom() {
+    const setupOpponentBoard = function setupOpponentBoardOnDom(missedHits, shipHits, shipCoords) {
+        const opponentField = document.querySelector(".opponentField");
+        opponentField.classList.toggle("fieldGrid");
+        if (opponentField.firstChild) {
+            opponentField.removeChild(opponentField.firstChild);
+        }
+
+        helperAddGrid(playerField);
+
+        missedHits.forEach((hit) => {
+            const currentCell = document.querySelector(`.cell[data-y="${hit[0]}"][data-x="${hit[1]}"]`);
+            currentCell.classList.toggle("miss");
+            currentCell.classList.toggle("empty");
+        });
+
+        shipHits.forEach((hit) => {
+            const currentCell = document.querySelector(`.cell[data-y="${hit[0]}"][data-x="${hit[1]}"]`);
+            currentCell.classList.toggle("hit");
+            currentCell.classList.toggle("empty");
+        });
+
 
     }
 
@@ -65,6 +143,14 @@ export default function SetupDom() {
         let currentY = e.clientY;
         let nextX = 0;
         let nextY = 0;
+        helperGetShipCoords(
+            [e.target.dataset.y, e.target.dataset.x],
+            e.target.dataset.direction,
+            e.target.dataset.size,
+        ).forEach((coord) => {
+            const currentCell = document.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
+            currentCell.classList.toggle("empty");
+        });
         
         
         const dragElement = function dragElementAround(e) {
@@ -84,11 +170,11 @@ export default function SetupDom() {
             const [currentDiv, divBellow] = document.elementsFromPoint(currentX, currentY)[1];
             const size = currentDiv.dataset.size;
             const direction = currentDiv.dataset.direction;
-            if (helperCheckCells(helperGetShipCoords({
-                headCoord:[divBellow.dataset.y, divBellow.dataset.x],
-                direction: direction,
-                size: size,
-             }))) {
+            if (helperCheckCells(helperGetShipCoords(
+                [divBellow.dataset.y, divBellow.dataset.x],
+                direction,
+                size,
+             ))) {
                 currentDiv.style.left = "0px";
                 currentDiv.style.top = "0px";
                 divBellow.appendChild(currentDiv);
@@ -101,11 +187,11 @@ export default function SetupDom() {
             const parentY = currentDiv.parentNode.dataset.y;
             const parentX = currentDiv.parentNode.dataset.x;
 
-            helperGetShipCoords({
-                headCoord: [parentY, parentX],
-                direction: direction,
-                size: size,
-            }).forEach((coord) => {
+            helperGetShipCoords(
+                [parentY, parentX],
+                direction,
+                size,
+            ).forEach((coord) => {
                 const currentCell = document.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
                 currentCell.classList.toggle("occupied");
                 currentCell.classList.toggle("empty");
@@ -121,14 +207,47 @@ export default function SetupDom() {
     const getShip = function getCoordsOfShipDiv(shipHead) {
         const parentDiv = shipHead.parentNode;
         const currentShip = shipHead;
-        const coordsArray = helperGetShipCoords({
-            headCoord: [parentDiv.dataset.y, parentDiv.dataset.x],
-            direction: currentShip.dataset.direction,
-            size: currentShip.dataset.size,
-        })
+        const coordsArray = helperGetShipCoords(
+            [parentDiv.dataset.y, parentDiv.dataset.x],
+            currentShip.dataset.direction,
+            currentShip.dataset.size,
+        )
 
         return coordsArray;
     }
+
+    const flipShip = function changeShipFromOneDirectionToAnother(shipDiv) {
+        const shipLength = shipDiv.dataset.size;
+        
+        if (shipDiv.dataset.direction === "h") {
+            shipDiv.dataset.direction = "v";
+            shipDiv.style.height = (shipLength * 100) + "%";
+            shipDiv.style.width = "100%";
+        } else if (shipDiv.dataset.direction === "v") {
+            shipDiv.dataset.direction =  "h";
+            shipDiv.style.height = "100%";
+            shipDiv.style.width = (shipLength * 100) + "%";
+        }
+    }
+
+    const restartGame = function restartGameToShipPositioning() {
+        const playerField = document.querySelector(".playerField");
+        const opponentField = document.querySelector(".opponentField");
+        const playButton = document.querySelector(".playButton");
+
+        while (playerField.firstChild) {
+            playerField.removeChild(playerField.firstChild);
+        }
+
+        while (opponentField.firstChild) {
+            opponentField.removeChild(opponentField.firstChild);
+        }
+        opponentField.classList.toggle("fieldGrid");
+        playButton.classList.toggle("startButton");
+        playButton.classList.toggle("restartButton");
+    }
+
+    
 
     const mainContainer = document.querySelector(".mainContainer");
 
@@ -147,8 +266,9 @@ export default function SetupDom() {
     const playerField = document.createElement("div");
     const opponentField = document.createElement("div");
     playerField.classList.toggle("fieldGrid");
+    playerField.classList.toggle("playerField");
+    opponentField.classList.toggle("opponentField");
     helperAddGrid(playerField);
-    ///opponentField.classList.toggle("fieldGrid");
     playerSide.appendChild(playerField);
     opponentSide.appendChild(opponentField);
     playZone.appendChild(playerSide);
@@ -160,6 +280,7 @@ export default function SetupDom() {
     const startButton = document.createElement("button");
     startButton.textContent = "Start";
     startButton.classList.toggle("startButton");
+    startButton.classList.toggle("playButton");
     startDiv.appendChild(startButton);
     mainContainer.appendChild(startDiv);
     
@@ -170,6 +291,8 @@ export default function SetupDom() {
         setupOpponentBoard,
         setupPlayerBoard,
         allowDrag,
+        flipShip,
+        restartGame,
     }
 
 }
