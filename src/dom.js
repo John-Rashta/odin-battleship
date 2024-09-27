@@ -105,7 +105,7 @@ export default function SetupDom() {
             ship[0][0].forEach((coord) => {
                 const currentCell = document.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
                 currentCell.classList.toggle("empty");
-                currentCell.classList.toggle("full");
+                currentCell.classList.toggle("occupied");
             });
 
             shipHead.appendChild(shipDiv);
@@ -150,6 +150,7 @@ export default function SetupDom() {
         ).forEach((coord) => {
             const currentCell = document.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
             currentCell.classList.toggle("empty");
+            currentCell.classList.toggle("occupied");
         });
         
         
