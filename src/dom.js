@@ -189,7 +189,6 @@ export default function SetupDom() {
         
         const removeEvents = function removeAllEvents(e) {
             if (originalX === e.clientX && originalY === e.clientY && Number(shipDiv.dataset.size) != 1) {
-                console.log("hello")
                 const parentDiv = shipDiv.parentNode;
                 const oppositeDirection = "h" === shipDiv.dataset.direction ? "v" : "h";
                 const currentCoords = helperGetShipCoords(
@@ -204,18 +203,15 @@ export default function SetupDom() {
                 );
                 if (oppositeDirection === "h" && (Number(parentDiv.dataset.x) + (Number(shipDiv.dataset.size)-1)) > 9 || 
                     oppositeDirection === "v" && (Number(parentDiv.dataset.y) - (Number(shipDiv.dataset.size)-1)) < 0) {
-                        console.log("too small")
                         shipDiv.style.zIndex = "2";
                         bodyDiv.removeEventListener("mousemove", dragElement);
                         bodyDiv.removeEventListener("mouseup", removeEvents);
                         bodyDiv.removeEventListener("mousemove", startDrag);
                     return;
                 }else if (helperCheckCells(possibleCoords.toSpliced(0, 1))) {
-                    console.log("here")
                     helperFlipShip(shipDiv);
                     currentCoords.concat(possibleCoords).forEach((coord) => {
                         const currentCell = document.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
-                        console.log(currentCell)
                         currentCell.classList.toggle("occupied");
                         currentCell.classList.toggle("empty");
                     });
