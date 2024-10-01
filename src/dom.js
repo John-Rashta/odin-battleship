@@ -13,19 +13,33 @@ export default function SetupDom() {
         return isEmpty;
     }
 
+    const helperFlipShip = function changeShipFromOneDirectionToAnother(shipDiv) {
+        const shipLength = shipDiv.dataset.size;
+        
+        if (shipDiv.dataset.direction === "h") {
+            shipDiv.dataset.direction = "v";
+            shipDiv.style.height = (100 * shipLength) + ((5 * shipLength) -5)  + "%";
+            shipDiv.style.width = "100%";
+        } else if (shipDiv.dataset.direction === "v") {
+            shipDiv.dataset.direction =  "h";
+            shipDiv.style.height = "100%";
+            shipDiv.style.width = (100 * shipLength) + ((5 * shipLength) -5)  + "%";
+        }
+    }
+
     const helperGetShipCoords = function getShipsCoordsFromDom(headCoord, direction, size) {
-        const shipArray = [headCoord];
+        const shipArray = [[Number(headCoord[0]), Number(headCoord[1])]];
 
         if (direction === "h") {
-            let currentX = headCoord[1];
+            let currentX = Number(headCoord[1]);
             for (let i = size-1; i > 0; i--) {
-                shipArray.push([headCoord[0], currentX + 1]);
+                shipArray.push([Number(headCoord[0]), currentX + 1]);
                 currentX += 1;
             }
         } else if (direction === "v") {
-            let currentY = headCoord[0];
+            let currentY = Number(headCoord[0]);
             for (let i = size-1; i > 0; i--) {
-                shipArray.push([currentY - 1, headCoord[1]]);
+                shipArray.push([currentY - 1, Number(headCoord[1])]);
                 currentY -= 1;
             }
         }
@@ -72,8 +86,8 @@ export default function SetupDom() {
         });
 
         shipCoords.forEach((ship) => {
-            const firstCoord = ship[0][0][0];
-            const secondCoord = ship[0][0][1];
+            const firstCoord = ship[0][0];
+            const secondCoord = ship[0][1];
             let direction;
             if (firstCoord[0] === secondCoord[0]) {
                 direction = "h";
@@ -81,8 +95,8 @@ export default function SetupDom() {
                 direction = "v";
             }
             const shipHead = document.querySelector(`.cell[data-y="${firstCoord[0]}"][data-x="${firstCoord[1]}"]`);
-            const shipLength = ship[0][0].length;
-            const sunked = ship[0][1];
+            const shipLength = ship[0].length;
+            const sunked = ship[1];
 
             const shipDiv = document.createElement("div");
             shipDiv.classList.toggle("ship");
@@ -102,7 +116,7 @@ export default function SetupDom() {
 
             }
 
-            ship[0][0].forEach((coord) => {
+            ship[0].forEach((coord) => {
                 const currentCell = document.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
                 currentCell.classList.toggle("empty");
                 currentCell.classList.toggle("occupied");
@@ -139,19 +153,28 @@ export default function SetupDom() {
 
     const allowDrag = function allowShipsToBeDragged(e) {
         e.preventDefault();
+        const bodyDiv = document.querySelector("body");
+        e.target.style.zIndex = "10";
+        const shipDiv = e.target;
+        const originalX = e.clientX;
+        const originalY = e.clientY;
         let currentX = e.clientX;
         let currentY = e.clientY;
         let nextX = 0;
         let nextY = 0;
-        helperGetShipCoords(
-            [e.target.dataset.y, e.target.dataset.x],
-            e.target.dataset.direction,
-            e.target.dataset.size,
-        ).forEach((coord) => {
-            const currentCell = document.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
-            currentCell.classList.toggle("empty");
-            currentCell.classList.toggle("occupied");
-        });
+
+        const startDrag = function startDraggingElement() {
+            helperGetShipCoords(
+                [shipDiv.parentNode.dataset.y, shipDiv.parentNode.dataset.x],
+                shipDiv.dataset.direction,
+                shipDiv.dataset.size,
+            ).forEach((coord) => {
+                const currentCell = document.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
+                currentCell.classList.toggle("empty");
+                currentCell.classList.toggle("occupied");
+            });
+
+        }
         
         
         const dragElement = function dragElementAround(e) {
@@ -160,26 +183,74 @@ export default function SetupDom() {
             nextY = currentY - e.clientY;
             currentX = e.clientX;
             currentY = e.clientY;
-            const currentLocation = e.target.getBoundingClientRect();
-            e.target.style.left = (currentLocation["x"] - nextX) + "px";
-            e.target.style.top = (currentLocation["y"] - nextY) + "px";
+            shipDiv.style.left = (shipDiv.offsetLeft - nextX) + "px";
+            shipDiv.style.top = (shipDiv.offsetTop - nextY) + "px";
         }
         
         const removeEvents = function removeAllEvents(e) {
+            if (originalX === e.clientX && originalY === e.clientY && Number(shipDiv.dataset.size) != 1) {
+                console.log("hello")
+                const parentDiv = shipDiv.parentNode;
+                const oppositeDirection = "h" === shipDiv.dataset.direction ? "v" : "h";
+                const currentCoords = helperGetShipCoords(
+                    [parentDiv.dataset.y, parentDiv.dataset.x],
+                    shipDiv.dataset.direction,
+                    shipDiv.dataset.size,
+                 );
+                const possibleCoords = helperGetShipCoords(
+                    [parentDiv.dataset.y, parentDiv.dataset.x],
+                    oppositeDirection,
+                    shipDiv.dataset.size,
+                );
+                if (oppositeDirection === "h" && (Number(parentDiv.dataset.x) + (Number(shipDiv.dataset.size)-1)) > 9 || 
+                    oppositeDirection === "v" && (Number(parentDiv.dataset.y) - (Number(shipDiv.dataset.size)-1)) < 0) {
+                        console.log("too small")
+                        shipDiv.style.zIndex = "2";
+                        bodyDiv.removeEventListener("mousemove", dragElement);
+                        bodyDiv.removeEventListener("mouseup", removeEvents);
+                        bodyDiv.removeEventListener("mousemove", startDrag);
+                    return;
+                }else if (helperCheckCells(possibleCoords.toSpliced(0, 1))) {
+                    console.log("here")
+                    helperFlipShip(shipDiv);
+                    currentCoords.concat(possibleCoords).forEach((coord) => {
+                        const currentCell = document.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
+                        console.log(currentCell)
+                        currentCell.classList.toggle("occupied");
+                        currentCell.classList.toggle("empty");
+                    });
+                }
+
+                shipDiv.style.zIndex = "2";
+                bodyDiv.removeEventListener("mousemove", startDrag);
+                bodyDiv.removeEventListener("mousemove", dragElement);
+                bodyDiv.removeEventListener("mouseup", removeEvents);
+                return;
+            }
             const currentX = e.clientX;
             const currentY = e.clientY;
-            const [currentDiv, divBellow] = document.elementsFromPoint(currentX, currentY)[1];
+            const [currentDiv, divBellow] = document.elementsFromPoint(currentX, currentY);
             const size = currentDiv.dataset.size;
             const direction = currentDiv.dataset.direction;
-            if (helperCheckCells(helperGetShipCoords(
-                [divBellow.dataset.y, divBellow.dataset.x],
-                direction,
-                size,
-             ))) {
-                currentDiv.style.left = "0px";
-                currentDiv.style.top = "0px";
-                divBellow.appendChild(currentDiv);
-             } else {
+            if (divBellow.classList.contains("cell")) {
+                if (shipDiv.dataset.direction === "h" && (Number(divBellow.dataset.x) + (Number(shipDiv.dataset.size)-1)) > 9 || 
+                    shipDiv.dataset.direction === "v" && (Number(divBellow.dataset.y) - (Number(shipDiv.dataset.size)-1)) < 0) {
+                    currentDiv.style.left = "0px";
+                    currentDiv.style.top = "0px";
+                }else if (helperCheckCells(helperGetShipCoords(
+                    [divBellow.dataset.y, divBellow.dataset.x],
+                    direction,
+                    size,
+                 ))) {
+                    currentDiv.style.left = "0px";
+                    currentDiv.style.top = "0px";
+                    divBellow.appendChild(currentDiv);
+                 } else {
+                    currentDiv.style.left = "0px";
+                    currentDiv.style.top = "0px";
+    
+                }
+            } else {
                 currentDiv.style.left = "0px";
                 currentDiv.style.top = "0px";
 
@@ -197,12 +268,14 @@ export default function SetupDom() {
                 currentCell.classList.toggle("occupied");
                 currentCell.classList.toggle("empty");
             })
-            e.target.removeEventListener("mousemove", dragElement);
-            e.target.removeEventListener("mouseup", removeEvents);
+            shipDiv.style.zIndex = "2";
+            bodyDiv.removeEventListener("mousemove", dragElement);
+            bodyDiv.removeEventListener("mouseup", removeEvents);
         }
         
-        e.target.addEventListener("mousemove", dragElement);
-        e.target.addEventListener("mouseup", removeEvents);
+        bodyDiv.addEventListener("mousemove", startDrag, {once: true});
+        bodyDiv.addEventListener("mousemove", dragElement);
+        bodyDiv.addEventListener("mouseup", removeEvents);
     }
 
     const getShip = function getCoordsOfShipDiv(shipHead) {
@@ -215,20 +288,6 @@ export default function SetupDom() {
         )
 
         return coordsArray;
-    }
-
-    const flipShip = function changeShipFromOneDirectionToAnother(shipDiv) {
-        const shipLength = shipDiv.dataset.size;
-        
-        if (shipDiv.dataset.direction === "h") {
-            shipDiv.dataset.direction = "v";
-            shipDiv.style.height = (shipLength * 100) + "%";
-            shipDiv.style.width = "100%";
-        } else if (shipDiv.dataset.direction === "v") {
-            shipDiv.dataset.direction =  "h";
-            shipDiv.style.height = "100%";
-            shipDiv.style.width = (shipLength * 100) + "%";
-        }
     }
 
     const restartGame = function restartGameToShipPositioning() {
@@ -276,6 +335,93 @@ export default function SetupDom() {
     playZone.appendChild(opponentSide);
     mainContainer.appendChild(playZone);
 
+    const defaultShips = [
+        [
+            [3, 0],
+            [2, 0],
+            [1, 0],
+            [0, 0],
+        ],
+        [
+            [5, 0],
+            [5, 1],
+            [5, 2],
+        ],
+        [
+            [2, 8],
+            [1, 8],
+            [0, 8],
+        ],
+        [
+            [7, 5],
+            [6, 5],
+        ],
+        [
+            [6, 9],
+            [5, 9],
+        ],
+        [
+            [9, 8],
+            [9, 9],
+        ],
+        [
+            [3, 3],
+        ],
+        [
+            [8, 2],
+        ],
+        [
+            [7, 3],
+        ],
+        [
+            [1, 5],
+        ],
+    ];
+    
+    defaultShips.forEach((ship) => {
+        let firstCoord;
+        let secondCoord;
+        let direction;
+        if (ship.length === 1) {
+            firstCoord = ship[0];
+            direction = "h";
+        } else {
+            firstCoord = ship[0];
+            secondCoord = ship[1];
+            direction;
+            if (firstCoord[0] === secondCoord[0]) {
+            direction = "h";
+            } else if (firstCoord[1] === secondCoord[1]) {
+            direction = "v";
+            }
+        }
+        const shipHead = document.querySelector(`.cell[data-y="${firstCoord[0]}"][data-x="${firstCoord[1]}"]`);
+        const shipLength = ship.length;
+
+        const shipDiv = document.createElement("div");
+        shipDiv.classList.toggle("ship");
+        shipDiv.dataset.size = shipLength;
+        shipDiv.dataset.direction = direction;
+
+        if (direction === "h") {
+            shipDiv.style.height = "100%";
+            shipDiv.style.width = (100 * shipLength) + ((5 * shipLength) -5)  + "%";
+
+        } else if (direction === "v") {
+            shipDiv.style.width = "100%";
+            shipDiv.style.height = (100 * shipLength) + ((5 * shipLength) -5) + "%";
+
+        }
+
+        ship.forEach((coord) => {
+            const currentCell = document.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
+            currentCell.classList.toggle("empty");
+            currentCell.classList.toggle("occupied");
+        });
+
+        shipHead.appendChild(shipDiv);
+    });
+
     const startDiv = document.createElement("div");
     startDiv.classList.toggle("startDiv");
     const startButton = document.createElement("button");
@@ -292,7 +438,6 @@ export default function SetupDom() {
         setupOpponentBoard,
         setupPlayerBoard,
         allowDrag,
-        flipShip,
         restartGame,
     }
 

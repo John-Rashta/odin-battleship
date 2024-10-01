@@ -63,3 +63,53 @@ h6 {
 }
 
 /* basic layout and styling */
+
+body {
+    height: 100vh;
+}
+
+
+.ship {
+    position: absolute;
+    background-color: #7dd3fc;
+    z-index: 2;
+    border: 2px solid blue;
+}
+
+.fieldGrid {
+    display: grid;
+    width: 500px;
+    height: 500px;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: repeat(10, 1fr);
+    gap: 2px;
+    background-color: black;
+    border: 2px solid black;
+}
+  
+.cell {
+    position: relative;
+    background-color: white;
+}
+  
+/*.hey {
+    display: flex;
+    border: solid blue;
+    flex-direction: column;
+    width: 50px;
+    height: 50px;
+    font-size: 80px;
+    color: red;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+    
+    
+}
+  
+.hey::before {
+    content: "\2716";
+    transform: translateY(-4px)
+}*/
+  
