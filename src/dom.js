@@ -67,12 +67,16 @@ export default function SetupDom() {
     }
 
     const setupPlayerBoard = function setupPlayerBoardOnDom(missedHits, shipHits, shipCoords) {
-        const playerField = document.querySelector(".playerField");
-        if (playerField.firstChild) {
+        const playerField = document.querySelector(".playerSide");
+        while (playerField.firstChild) {
             playerField.removeChild(playerField.firstChild);
         }
-
-        helperAddGrid(playerField);
+        
+        const newField = document.createElement("div");
+        newField.classList.toggle("fieldGrid");
+        newField.classList.toggle("playerField");
+        playerField.appendChild(newField);
+        helperAddGrid(newField);
 
         missedHits.forEach((hit) => {
             const currentCell = document.querySelector(`.cell[data-y="${hit[0]}"][data-x="${hit[1]}"]`);
@@ -86,14 +90,19 @@ export default function SetupDom() {
         });
 
         shipCoords.forEach((ship) => {
-            const firstCoord = ship[0][0];
-            const secondCoord = ship[0][1];
             let direction;
-            if (firstCoord[0] === secondCoord[0]) {
+            const firstCoord = ship[0][0];
+            if (ship[0].length === 1) {
                 direction = "h";
-            } else if (firstCoord[1] === secondCoord[1]) {
-                direction = "v";
+            } else {
+                const secondCoord = ship[0][1];
+                if (firstCoord[0] === secondCoord[0]) {
+                    direction = "h";
+                } else if (firstCoord[1] === secondCoord[1]) {
+                    direction = "v";
+                }
             }
+
             const shipHead = document.querySelector(`.cell[data-y="${firstCoord[0]}"][data-x="${firstCoord[1]}"]`);
             const shipLength = ship[0].length;
             const sunked = ship[1];
@@ -108,11 +117,11 @@ export default function SetupDom() {
 
             if (direction === "h") {
                 shipDiv.style.height = "100%";
-                shipDiv.style.width = (100 * shipLength) + "%";
+                shipDiv.style.width = (100 * shipLength) + ((5 * shipLength) -5) + "%";
 
             } else if (direction === "v") {
                 shipDiv.style.width = "100%";
-                shipDiv.style.height = (100 * shipLength) + "%";
+                shipDiv.style.height = (100 * shipLength) + ((5 * shipLength) -5) + "%";
 
             }
 
@@ -128,13 +137,16 @@ export default function SetupDom() {
     }
 
     const setupOpponentBoard = function setupOpponentBoardOnDom(missedHits, shipHits, shipCoords) {
-        const opponentField = document.querySelector(".opponentField");
-        opponentField.classList.toggle("fieldGrid");
-        if (opponentField.firstChild) {
+        const opponentField = document.querySelector(".opponentSide");
+        while (opponentField.firstChild) {
             opponentField.removeChild(opponentField.firstChild);
         }
 
-        helperAddGrid(playerField);
+        const newField = document.createElement("div");
+        newField.classList.toggle("fieldGrid");
+        newField.classList.toggle("opponentField");
+        opponentField.appendChild(newField);
+        helperAddGrid(newField);
 
         missedHits.forEach((hit) => {
             const currentCell = document.querySelector(`.cell[data-y="${hit[0]}"][data-x="${hit[1]}"]`);
@@ -147,6 +159,51 @@ export default function SetupDom() {
             currentCell.classList.toggle("hit");
             currentCell.classList.toggle("empty");
         });
+
+        shipCoords.forEach((ship) => {
+            const sunked = ship[1];
+            if (sunked) {
+                let direction;
+                const firstCoord = ship[0][0];
+                if (ship[0].length === 1) {
+                    direction = "h";
+                } else {
+                    const secondCoord = ship[0][1];
+                    if (firstCoord[0] === secondCoord[0]) {
+                        direction = "h";
+                    } else if (firstCoord[1] === secondCoord[1]) {
+                        direction = "v";
+                    }
+                }
+
+                const shipHead = document.querySelector(`.cell[data-y="${firstCoord[0]}"][data-x="${firstCoord[1]}"]`);
+                const shipLength = ship[0].length;
+
+                const shipDiv = document.createElement("div");
+                shipDiv.classList.toggle("ship");
+                shipDiv.dataset.size = shipLength;
+                shipDiv.dataset.direction = direction;
+                shipDiv.classList.toggle("sunk");
+
+                if (direction === "h") {
+                    shipDiv.style.height = "100%";
+                    shipDiv.style.width = (100 * shipLength) + ((5 * shipLength) -5) + "%";
+
+                } else if (direction === "v") {
+                    shipDiv.style.width = "100%";
+                    shipDiv.style.height = (100 * shipLength) + ((5 * shipLength) -5) + "%";
+
+                }
+
+                ship[0].forEach((coord) => {
+                    const currentCell = document.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
+                    currentCell.classList.toggle("empty");
+                    currentCell.classList.toggle("occupied");
+                });
+
+                shipHead.appendChild(shipDiv);
+            }
+        })
 
 
     }
@@ -274,16 +331,21 @@ export default function SetupDom() {
         bodyDiv.addEventListener("mouseup", removeEvents);
     }
 
-    const getShip = function getCoordsOfShipDiv(shipHead) {
-        const parentDiv = shipHead.parentNode;
-        const currentShip = shipHead;
-        const coordsArray = helperGetShipCoords(
-            [parentDiv.dataset.y, parentDiv.dataset.x],
-            currentShip.dataset.direction,
-            currentShip.dataset.size,
-        )
+    const getShips = function getCoordsOfShips() {
+        const totalShips = [];
+        const allShipDivs = document.querySelectorAll(".ship");
+        allShipDivs.forEach((div) => {
+            const parentDiv = div.parentNode;
+            const currentShip = div;
+            const coordsArray = helperGetShipCoords(
+                [parentDiv.dataset.y, parentDiv.dataset.x],
+                currentShip.dataset.direction,
+                currentShip.dataset.size,
+            );
+            totalShips.push(coordsArray);
+        })
 
-        return coordsArray;
+        return totalShips;
     }
 
     const restartGame = function restartGameToShipPositioning() {
@@ -396,6 +458,7 @@ export default function SetupDom() {
 
         const shipDiv = document.createElement("div");
         shipDiv.classList.toggle("ship");
+        shipDiv.classList.toggle("draggable");
         shipDiv.dataset.size = shipLength;
         shipDiv.dataset.direction = direction;
 
@@ -429,7 +492,7 @@ export default function SetupDom() {
     
 
     return {
-        getShip,
+        getShips,
         getSquareHit,
         setupOpponentBoard,
         setupPlayerBoard,
