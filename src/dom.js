@@ -348,21 +348,129 @@ export default function SetupDom() {
         return totalShips;
     }
 
-    const restartGame = function restartGameToShipPositioning() {
-        const playerField = document.querySelector(".playerField");
-        const opponentField = document.querySelector(".opponentField");
-        const playButton = document.querySelector(".playButton");
+    const changeButton = function changeStartButtonToRestart() {
+        const startButton = document.querySelector(".playButton");
+        console.log(startButton)
+        startButton.textContent = startButton.classList.contains("startButton") ? "Restart" : "Start";
+        startButton.classList.toggle("startButton");
+        startButton.classList.toggle("restartButton");
+    }
 
-        while (playerField.firstChild) {
-            playerField.removeChild(playerField.firstChild);
+    const createStartScreen = function createGridToPlaceShips() {
+        const opponentContainer = document.querySelector(".opponentPlayerContainer");
+        const playerContainer = document.querySelector(".mainPlayerContainer");
+        while (opponentContainer.firstChild) {
+            opponentContainer.removeChild(opponentContainer.firstChild);
         }
 
-        while (opponentField.firstChild) {
-            opponentField.removeChild(opponentField.firstChild);
+        while (playerContainer.firstChild) {
+            playerContainer.removeChild(playerContainer.firstChild);
         }
-        opponentField.classList.toggle("fieldGrid");
-        playButton.classList.toggle("startButton");
-        playButton.classList.toggle("restartButton");
+
+        const playerSide = document.createElement("div");
+        playerSide.classList.toggle("playerSide");
+        const opponentSide = document.createElement("div");
+        opponentSide.classList.toggle("opponentSide");
+        const playerField = document.createElement("div");
+        const opponentField = document.createElement("div");
+        playerField.classList.toggle("fieldGrid");
+        playerField.classList.toggle("playerField");
+        opponentField.classList.toggle("opponentField");
+        playerSide.appendChild(playerField);
+        opponentSide.appendChild(opponentField);
+        playerContainer.appendChild(playerSide);
+        opponentContainer.appendChild(opponentSide);
+        helperAddGrid(playerField);
+
+        const defaultShips = [
+            [
+                [3, 0],
+                [2, 0],
+                [1, 0],
+                [0, 0],
+            ],
+            [
+                [5, 0],
+                [5, 1],
+                [5, 2],
+            ],
+            [
+                [2, 8],
+                [1, 8],
+                [0, 8],
+            ],
+            [
+                [7, 5],
+                [6, 5],
+            ],
+            [
+                [6, 9],
+                [5, 9],
+            ],
+            [
+                [9, 8],
+                [9, 9],
+            ],
+            [
+                [3, 3],
+            ],
+            [
+                [8, 2],
+            ],
+            [
+                [7, 3],
+            ],
+            [
+                [1, 5],
+            ],
+        ];
+        
+        defaultShips.forEach((ship) => {
+            let firstCoord;
+            let secondCoord;
+            let direction;
+            if (ship.length === 1) {
+                firstCoord = ship[0];
+                direction = "h";
+            } else {
+                firstCoord = ship[0];
+                secondCoord = ship[1];
+                direction;
+                if (firstCoord[0] === secondCoord[0]) {
+                direction = "h";
+                } else if (firstCoord[1] === secondCoord[1]) {
+                direction = "v";
+                }
+            }
+            const shipHead = document.querySelector(`.cell[data-y="${firstCoord[0]}"][data-x="${firstCoord[1]}"]`);
+            const shipLength = ship.length;
+    
+            const shipDiv = document.createElement("div");
+            shipDiv.classList.toggle("ship");
+            shipDiv.classList.toggle("draggable");
+            shipDiv.dataset.size = shipLength;
+            shipDiv.dataset.direction = direction;
+    
+            if (direction === "h") {
+                shipDiv.style.height = "100%";
+                shipDiv.style.width = (100 * shipLength) + ((5 * shipLength) -5)  + "%";
+    
+            } else if (direction === "v") {
+                shipDiv.style.width = "100%";
+                shipDiv.style.height = (100 * shipLength) + ((5 * shipLength) -5) + "%";
+    
+            }
+    
+            ship.forEach((coord) => {
+                const currentCell = document.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
+                currentCell.classList.toggle("empty");
+                currentCell.classList.toggle("occupied");
+            });
+    
+            shipHead.appendChild(shipDiv);
+        });
+
+
     }
 
     
@@ -376,111 +484,15 @@ export default function SetupDom() {
 
     const playZone = document.createElement("div");
     playZone.classList.toggle("playZone");
-    const playerSide = document.createElement("div");
-    playerSide.classList.toggle("playerSide");
-    const opponentSide = document.createElement("div");
-    opponentSide.classList.toggle("opponentSide");
-
-    const playerField = document.createElement("div");
-    const opponentField = document.createElement("div");
-    playerField.classList.toggle("fieldGrid");
-    playerField.classList.toggle("playerField");
-    opponentField.classList.toggle("opponentField");
-    helperAddGrid(playerField);
-    playerSide.appendChild(playerField);
-    opponentSide.appendChild(opponentField);
-    playZone.appendChild(playerSide);
-    playZone.appendChild(opponentSide);
+    const mainPlayerContainer = document.createElement("div");
+    mainPlayerContainer.classList.toggle("mainPlayerContainer");
+    const opponentPlayerContainer = document.createElement("div");
+    opponentPlayerContainer.classList.toggle("opponentPlayerContainer");
+    playZone.appendChild(mainPlayerContainer);
+    playZone.appendChild(opponentPlayerContainer);
     mainContainer.appendChild(playZone);
 
-    const defaultShips = [
-        [
-            [3, 0],
-            [2, 0],
-            [1, 0],
-            [0, 0],
-        ],
-        [
-            [5, 0],
-            [5, 1],
-            [5, 2],
-        ],
-        [
-            [2, 8],
-            [1, 8],
-            [0, 8],
-        ],
-        [
-            [7, 5],
-            [6, 5],
-        ],
-        [
-            [6, 9],
-            [5, 9],
-        ],
-        [
-            [9, 8],
-            [9, 9],
-        ],
-        [
-            [3, 3],
-        ],
-        [
-            [8, 2],
-        ],
-        [
-            [7, 3],
-        ],
-        [
-            [1, 5],
-        ],
-    ];
     
-    defaultShips.forEach((ship) => {
-        let firstCoord;
-        let secondCoord;
-        let direction;
-        if (ship.length === 1) {
-            firstCoord = ship[0];
-            direction = "h";
-        } else {
-            firstCoord = ship[0];
-            secondCoord = ship[1];
-            direction;
-            if (firstCoord[0] === secondCoord[0]) {
-            direction = "h";
-            } else if (firstCoord[1] === secondCoord[1]) {
-            direction = "v";
-            }
-        }
-        const shipHead = document.querySelector(`.cell[data-y="${firstCoord[0]}"][data-x="${firstCoord[1]}"]`);
-        const shipLength = ship.length;
-
-        const shipDiv = document.createElement("div");
-        shipDiv.classList.toggle("ship");
-        shipDiv.classList.toggle("draggable");
-        shipDiv.dataset.size = shipLength;
-        shipDiv.dataset.direction = direction;
-
-        if (direction === "h") {
-            shipDiv.style.height = "100%";
-            shipDiv.style.width = (100 * shipLength) + ((5 * shipLength) -5)  + "%";
-
-        } else if (direction === "v") {
-            shipDiv.style.width = "100%";
-            shipDiv.style.height = (100 * shipLength) + ((5 * shipLength) -5) + "%";
-
-        }
-
-        ship.forEach((coord) => {
-            const currentCell = document.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
-            currentCell.classList.toggle("empty");
-            currentCell.classList.toggle("occupied");
-        });
-
-        shipHead.appendChild(shipDiv);
-    });
-
     const startDiv = document.createElement("div");
     startDiv.classList.toggle("startDiv");
     const startButton = document.createElement("button");
@@ -497,7 +509,8 @@ export default function SetupDom() {
         setupOpponentBoard,
         setupPlayerBoard,
         allowDrag,
-        restartGame,
+        changeButton,
+        createStartScreen,
     }
 
 }
