@@ -79,14 +79,17 @@ export default function SetupDom() {
         helperAddGrid(newField);
 
         missedHits.forEach((hit) => {
-            const currentCell = document.querySelector(`.cell[data-y="${hit[0]}"][data-x="${hit[1]}"]`);
+            const currentCell = playerField.querySelector(`.cell[data-y="${hit[0]}"][data-x="${hit[1]}"]`);
             currentCell.classList.toggle("miss");
             currentCell.classList.toggle("empty");
         });
 
         shipHits.forEach((hit) => {
-            const currentCell = document.querySelector(`.cell[data-y="${hit[0]}"][data-x="${hit[1]}"]`);
-            currentCell.classList.toggle("hit");
+            const currentCell = playerField.querySelector(`.cell[data-y="${hit[0]}"][data-x="${hit[1]}"]`);
+            const innerCell = document.createElement("div");
+            currentCell.appendChild(innerCell);
+            innerCell.classList.toggle("hit");
+            currentCell.classList.toggle("empty");
         });
 
         shipCoords.forEach((ship) => {
@@ -103,7 +106,7 @@ export default function SetupDom() {
                 }
             }
 
-            const shipHead = document.querySelector(`.cell[data-y="${firstCoord[0]}"][data-x="${firstCoord[1]}"]`);
+            const shipHead = playerField.querySelector(`.cell[data-y="${firstCoord[0]}"][data-x="${firstCoord[1]}"]`);
             const shipLength = ship[0].length;
             const sunked = ship[1];
 
@@ -126,8 +129,7 @@ export default function SetupDom() {
             }
 
             ship[0].forEach((coord) => {
-                const currentCell = document.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
-                currentCell.classList.toggle("empty");
+                const currentCell = playerField.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
                 currentCell.classList.toggle("occupied");
             });
 
@@ -149,14 +151,16 @@ export default function SetupDom() {
         helperAddGrid(newField);
 
         missedHits.forEach((hit) => {
-            const currentCell = document.querySelector(`.cell[data-y="${hit[0]}"][data-x="${hit[1]}"]`);
+            const currentCell = opponentField.querySelector(`.cell[data-y="${hit[0]}"][data-x="${hit[1]}"]`);
             currentCell.classList.toggle("miss");
             currentCell.classList.toggle("empty");
         });
 
         shipHits.forEach((hit) => {
-            const currentCell = document.querySelector(`.cell[data-y="${hit[0]}"][data-x="${hit[1]}"]`);
-            currentCell.classList.toggle("hit");
+            const currentCell = opponentField.querySelector(`.cell[data-y="${hit[0]}"][data-x="${hit[1]}"]`);
+            const innerCell = document.createElement("div");
+            currentCell.appendChild(innerCell);
+            innerCell.classList.toggle("hit");
             currentCell.classList.toggle("empty");
         });
 
@@ -176,7 +180,7 @@ export default function SetupDom() {
                     }
                 }
 
-                const shipHead = document.querySelector(`.cell[data-y="${firstCoord[0]}"][data-x="${firstCoord[1]}"]`);
+                const shipHead = opponentField.querySelector(`.cell[data-y="${firstCoord[0]}"][data-x="${firstCoord[1]}"]`);
                 const shipLength = ship[0].length;
 
                 const shipDiv = document.createElement("div");
@@ -196,8 +200,7 @@ export default function SetupDom() {
                 }
 
                 ship[0].forEach((coord) => {
-                    const currentCell = document.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
-                    currentCell.classList.toggle("empty");
+                    const currentCell = opponentField.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
                     currentCell.classList.toggle("occupied");
                 });
 
@@ -350,7 +353,6 @@ export default function SetupDom() {
 
     const changeButton = function changeStartButtonToRestart() {
         const startButton = document.querySelector(".playButton");
-        console.log(startButton)
         startButton.textContent = startButton.classList.contains("startButton") ? "Restart" : "Start";
         startButton.classList.toggle("startButton");
         startButton.classList.toggle("restartButton");

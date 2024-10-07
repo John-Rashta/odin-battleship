@@ -58,21 +58,24 @@ export default function Gameboard() {
         if (board[coords[0]][coords[1]] === 0) {
             board[coords[0]][coords[1]] = 1;
             missedHits.push(coords);
-            return false;
+            return "miss";
         }
 
         if (board[coords[0]][coords[1]] === 1) {
-            return false;
+            return "again";
         }
 
         if (typeof board[coords[0]][coords[1]] === "object")  {
             if (!shipHits.every((current) => current[0] != coords[0] || current[1] != coords[1])) {
-                return;
+                return "again";
             }
 
             board[coords[0]][coords[1]].hit();
             shipHits.push(coords);
-            return true;
+            if (board[coords[0]][coords[1]].isSunk()) {
+                return "sunk";
+            }
+            return "hit";
         }
     }
 
@@ -86,6 +89,10 @@ export default function Gameboard() {
         return tempCheck;
     };
 
+    const getAllHits = function getAllMissedAndShipHits() {
+        return missedHits.concat(shipHits);
+    }
+
     return {
         getMissedHits,
         getShipHits,
@@ -93,5 +100,6 @@ export default function Gameboard() {
         setup,
         receiveAttack,
         allSunk,
+        getAllHits,
     }
 };

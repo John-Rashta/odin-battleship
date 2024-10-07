@@ -49,3 +49,34 @@ test("adds 2 ships and sinks them properly", () => {
     newBoard.receiveAttack([1, 0]);
     expect(newBoard.allSunk()).toBe(true);
 })
+
+test("gameboard returns miss when the hit is a miss", () => {
+    const newBoard = Gameboard();
+    newBoard.setup([[[2, 3],[2, 4],[2, 5]]]);
+    const checkHit = newBoard.receiveAttack([2, 1]);
+    expect(checkHit).toBe("miss");
+})
+
+test("gameboard returns hit when the hit is a success", () => {
+    const newBoard = Gameboard();
+    newBoard.setup([[[2, 3],[2, 4],[2, 5]]]);
+    const checkHit = newBoard.receiveAttack([2, 3]);
+    expect(checkHit).toBe("hit");
+})
+
+test("gameboard returns sunk when the ship is sunk", () => {
+    const newBoard = Gameboard();
+    newBoard.setup([[[2, 3],[2, 4],[2, 5]], [[4, 4]]]);
+    const checkHit = newBoard.receiveAttack([4, 4]);
+    expect(checkHit).toBe("sunk");
+})
+
+test("get all hits properly" , () => {
+    const newBoard = Gameboard();
+    newBoard.setup([[[2, 3],[2, 4],[2, 5]]]);
+    newBoard.receiveAttack([1, 1]);
+    newBoard.receiveAttack([2, 3]);
+    newBoard.receiveAttack([2, 4]);
+    expect(newBoard.getAllHits()).toEqual([[1, 1], [2, 3], [2, 4]]);
+
+})
