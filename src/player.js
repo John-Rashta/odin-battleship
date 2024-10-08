@@ -40,6 +40,14 @@ export default function setupPlayer() {
         return shipArray;
     }
 
+    const helperCheckCoords = function checkCoordsFromShip(ship, occupied) {
+        return ship.some((shipCoord) => {
+            return occupied.some((coord) => {
+            return coord[0] === shipCoord[0] && coord[1] === shipCoord[1];
+            })
+        });
+    }
+
     const getNewShip = function getShipThatFits(occupiedCoords, length) {
         const coordsToCheck = occupiedCoords;
         
@@ -51,11 +59,7 @@ export default function setupPlayer() {
                 }
                 const newShip = getRandomShip(randomCoord, length, 1);
             
-                const isItOccupied = newShip.some((shipCoord) => {
-                    return coordsToCheck.some((coord) => {
-                    return coord[0] === shipCoord[0] && coord[1] === shipCoord[1];
-                    })
-                });
+                const isItOccupied = helperCheckCoords(newShip, coordsToCheck);
           
                 if (isItOccupied) {
                     continue;
@@ -70,11 +74,8 @@ export default function setupPlayer() {
                     randomCoord[1] -= length-1;
                 }
                 const newShip = getRandomShip(randomCoord, length, 0);
-                const isItOccupied = newShip.some((shipCoord) => {
-                    return coordsToCheck.some((coord) => {
-                    return coord[0] === shipCoord[0] && coord[1] === shipCoord[1];
-                    })
-                })
+                const isItOccupied = helperCheckCoords(newShip, coordsToCheck);
+                
                 if (isItOccupied) {
                     continue;
                 } else {

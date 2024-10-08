@@ -13,6 +13,25 @@ export default function SetupDom() {
         return isEmpty;
     }
 
+    const helperAddSides = function addNumbersAndLettersToAGrid(grid) {
+        for (let i = 0; i < 10 ; i++) {
+            const tempDiv = grid.querySelector(`.cell[data-y="${i}"][data-x="0"]`);
+            const newDiv = document.createElement("div");
+            newDiv.textContent = i + 1;
+            newDiv.classList.toggle("sideNumber");
+            tempDiv.appendChild(newDiv);
+        }
+
+        for (let i = 0; i < 10; i++) {
+            const tempDiv = grid.querySelector(`.cell[data-y="0"][data-x="${i}"]`);
+            const newDiv = document.createElement("div");
+            newDiv.textContent = String.fromCharCode(65 + i);
+            newDiv.classList.toggle("bottomLetter");
+            tempDiv.appendChild(newDiv);
+        }
+
+    }
+
     const helperFlipShip = function changeShipFromOneDirectionToAnother(shipDiv) {
         const shipLength = shipDiv.dataset.size;
         
@@ -61,39 +80,27 @@ export default function SetupDom() {
         
     }
 
-    const getSquareHit = function getCoordsFromSquareThatWasHit(square) {
-        return [Number(square.dataset.y), Number(square.dataset.x)];
-
-    }
-
-    const setupPlayerBoard = function setupPlayerBoardOnDom(missedHits, shipHits, shipCoords) {
-        const playerField = document.querySelector(".playerSide");
-        while (playerField.firstChild) {
-            playerField.removeChild(playerField.firstChild);
-        }
-        
-        const newField = document.createElement("div");
-        newField.classList.toggle("fieldGrid");
-        newField.classList.toggle("playerField");
-        playerField.appendChild(newField);
-        helperAddGrid(newField);
-
+    const helperMissedHits = function toggleMissedHitsCells(missedHits, currentField) {
         missedHits.forEach((hit) => {
-            const currentCell = playerField.querySelector(`.cell[data-y="${hit[0]}"][data-x="${hit[1]}"]`);
+            const currentCell = currentField.querySelector(`.cell[data-y="${hit[0]}"][data-x="${hit[1]}"]`);
             currentCell.classList.toggle("miss");
             currentCell.classList.toggle("empty");
         });
+    }
 
+    const helperShipHits = function toggleShipHitsCells(shipHits, currentField) {
         shipHits.forEach((hit) => {
-            const currentCell = playerField.querySelector(`.cell[data-y="${hit[0]}"][data-x="${hit[1]}"]`);
+            const currentCell = currentField.querySelector(`.cell[data-y="${hit[0]}"][data-x="${hit[1]}"]`);
             const innerCell = document.createElement("div");
             currentCell.appendChild(innerCell);
-            innerCell.classList.toggle("hit");
+            innerCell.classList.toggle("hitContent");
+            currentCell.classList.toggle("hit");
             currentCell.classList.toggle("empty");
         });
+    }
 
-        shipCoords.forEach((ship) => {
-            let direction;
+    const helperShips = function toggleShipsCells(ship, currentField) {
+        let direction;
             const firstCoord = ship[0][0];
             if (ship[0].length === 1) {
                 direction = "h";
@@ -106,7 +113,7 @@ export default function SetupDom() {
                 }
             }
 
-            const shipHead = playerField.querySelector(`.cell[data-y="${firstCoord[0]}"][data-x="${firstCoord[1]}"]`);
+            const shipHead = currentField.querySelector(`.cell[data-y="${firstCoord[0]}"][data-x="${firstCoord[1]}"]`);
             const shipLength = ship[0].length;
             const sunked = ship[1];
 
@@ -129,11 +136,46 @@ export default function SetupDom() {
             }
 
             ship[0].forEach((coord) => {
-                const currentCell = playerField.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
+                const currentCell = currentField.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
                 currentCell.classList.toggle("occupied");
             });
 
             shipHead.appendChild(shipDiv);
+    }
+
+    const helperToggle = function toggleEmptyAndOccupiedForStartScreen(coords) {
+        coords.forEach((coord) => {
+            const currentCell = document.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
+            currentCell.classList.toggle("empty");
+            currentCell.classList.toggle("occupied");
+        });
+
+    }
+
+    const getSquareHit = function getCoordsFromSquareThatWasHit(square) {
+        return [Number(square.dataset.y), Number(square.dataset.x)];
+
+    }
+
+    const setupPlayerBoard = function setupPlayerBoardOnDom(missedHits, shipHits, shipCoords) {
+        const playerField = document.querySelector(".playerSide");
+        while (playerField.firstChild) {
+            playerField.removeChild(playerField.firstChild);
+        }
+        
+        const newField = document.createElement("div");
+        newField.classList.toggle("fieldGrid");
+        newField.classList.toggle("playerField");
+        playerField.appendChild(newField);
+        helperAddGrid(newField);
+        helperAddSides(newField);
+
+        helperMissedHits(missedHits, playerField);
+
+        helperShipHits(shipHits, playerField);
+
+        shipCoords.forEach((ship) => {
+            helperShips(ship, playerField);
         });
 
     }
@@ -149,62 +191,16 @@ export default function SetupDom() {
         newField.classList.toggle("opponentField");
         opponentField.appendChild(newField);
         helperAddGrid(newField);
+        helperAddSides(newField);
 
-        missedHits.forEach((hit) => {
-            const currentCell = opponentField.querySelector(`.cell[data-y="${hit[0]}"][data-x="${hit[1]}"]`);
-            currentCell.classList.toggle("miss");
-            currentCell.classList.toggle("empty");
-        });
+        helperMissedHits(missedHits, opponentField);
 
-        shipHits.forEach((hit) => {
-            const currentCell = opponentField.querySelector(`.cell[data-y="${hit[0]}"][data-x="${hit[1]}"]`);
-            const innerCell = document.createElement("div");
-            currentCell.appendChild(innerCell);
-            innerCell.classList.toggle("hit");
-            currentCell.classList.toggle("empty");
-        });
+        helperShipHits(shipHits, opponentField);
 
         shipCoords.forEach((ship) => {
             const sunked = ship[1];
             if (sunked) {
-                let direction;
-                const firstCoord = ship[0][0];
-                if (ship[0].length === 1) {
-                    direction = "h";
-                } else {
-                    const secondCoord = ship[0][1];
-                    if (firstCoord[0] === secondCoord[0]) {
-                        direction = "h";
-                    } else if (firstCoord[1] === secondCoord[1]) {
-                        direction = "v";
-                    }
-                }
-
-                const shipHead = opponentField.querySelector(`.cell[data-y="${firstCoord[0]}"][data-x="${firstCoord[1]}"]`);
-                const shipLength = ship[0].length;
-
-                const shipDiv = document.createElement("div");
-                shipDiv.classList.toggle("ship");
-                shipDiv.dataset.size = shipLength;
-                shipDiv.dataset.direction = direction;
-                shipDiv.classList.toggle("sunk");
-
-                if (direction === "h") {
-                    shipDiv.style.height = "100%";
-                    shipDiv.style.width = (100 * shipLength) + ((5 * shipLength) -5) + "%";
-
-                } else if (direction === "v") {
-                    shipDiv.style.width = "100%";
-                    shipDiv.style.height = (100 * shipLength) + ((5 * shipLength) -5) + "%";
-
-                }
-
-                ship[0].forEach((coord) => {
-                    const currentCell = opponentField.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
-                    currentCell.classList.toggle("occupied");
-                });
-
-                shipHead.appendChild(shipDiv);
+                helperShips(ship, opponentField);
             }
         })
 
@@ -224,16 +220,11 @@ export default function SetupDom() {
         let nextY = 0;
 
         const startDrag = function startDraggingElement() {
-            helperGetShipCoords(
+            helperToggle(helperGetShipCoords(
                 [shipDiv.parentNode.dataset.y, shipDiv.parentNode.dataset.x],
                 shipDiv.dataset.direction,
                 shipDiv.dataset.size,
-            ).forEach((coord) => {
-                const currentCell = document.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
-                currentCell.classList.toggle("empty");
-                currentCell.classList.toggle("occupied");
-            });
-
+            ));
         }
         
         
@@ -270,11 +261,7 @@ export default function SetupDom() {
                     return;
                 }else if (helperCheckCells(possibleCoords.toSpliced(0, 1))) {
                     helperFlipShip(shipDiv);
-                    currentCoords.concat(possibleCoords).forEach((coord) => {
-                        const currentCell = document.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
-                        currentCell.classList.toggle("occupied");
-                        currentCell.classList.toggle("empty");
-                    });
+                    helperToggle(currentCoords.concat(possibleCoords));
                 }
 
                 shipDiv.style.zIndex = "2";
@@ -315,15 +302,11 @@ export default function SetupDom() {
             const parentY = currentDiv.parentNode.dataset.y;
             const parentX = currentDiv.parentNode.dataset.x;
 
-            helperGetShipCoords(
+            helperToggle(helperGetShipCoords(
                 [parentY, parentX],
                 direction,
                 size,
-            ).forEach((coord) => {
-                const currentCell = document.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
-                currentCell.classList.toggle("occupied");
-                currentCell.classList.toggle("empty");
-            })
+            ));
             shipDiv.style.zIndex = "2";
             bodyDiv.removeEventListener("mousemove", dragElement);
             bodyDiv.removeEventListener("mouseup", removeEvents);
@@ -383,6 +366,7 @@ export default function SetupDom() {
         playerContainer.appendChild(playerSide);
         opponentContainer.appendChild(opponentSide);
         helperAddGrid(playerField);
+        helperAddSides(playerField);
 
         const defaultShips = [
             [
@@ -462,12 +446,8 @@ export default function SetupDom() {
                 shipDiv.style.height = (100 * shipLength) + ((5 * shipLength) -5) + "%";
     
             }
-    
-            ship.forEach((coord) => {
-                const currentCell = document.querySelector(`.cell[data-y="${coord[0]}"][data-x="${coord[1]}"]`);
-                currentCell.classList.toggle("empty");
-                currentCell.classList.toggle("occupied");
-            });
+            
+            helperToggle(ship);
     
             shipHead.appendChild(shipDiv);
         });

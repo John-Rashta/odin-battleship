@@ -68,6 +68,20 @@ body {
     height: 100vh;
 }
 
+.mainContainer {
+  padding: 50px;
+  display: flex;
+  flex-direction: column;
+  gap: 50px;
+}
+
+.playZone {
+  display: flex;
+  gap: 100px;
+  justify-content: center;
+  
+}
+
 
 .ship {
     position: absolute;
@@ -94,7 +108,7 @@ body {
     background-color: white;
 }
   
-.hit {
+.hitContent {
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -112,7 +126,7 @@ body {
     
 }
   
-.hit::before {
+.hitContent::before {
     content: "\00d7";
     z-index: 2;
 }
@@ -121,3 +135,18 @@ body {
   background-color: cyan;
 }
   
+.sideNumber {
+  position: absolute;
+  width: 15px;
+  height: 10px;
+  left: -35px;
+  top: 13px;
+  text-align: right;
+
+}
+
+.bottomLetter {
+  position: absolute;
+  top: 60px;
+  left: 18px;
+}

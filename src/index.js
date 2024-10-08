@@ -37,7 +37,7 @@ const pageLoad = function pageSetupAndManagement() {
             opponentGrid.addEventListener("click", (e) => {
                 if (gameOver) {
                     return;
-                } else if (e.target.classList.contains("cell")) {
+                } else if (e.target.classList.contains("cell") && e.target.classList.contains("empty")) {
                     if (currentPlayer === realPlayer) {
                         currentPlayer = null;
                         const hitCoords = domManager.getSquareHit(e.target);
