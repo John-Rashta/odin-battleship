@@ -352,6 +352,9 @@ export default function SetupDom() {
             playerContainer.removeChild(playerContainer.firstChild);
         }
 
+        const gameEndDiv = document.querySelector(".gameEnd");
+        gameEndDiv.textContent = "";
+
         const playerSide = document.createElement("div");
         playerSide.classList.toggle("playerSide");
         const opponentSide = document.createElement("div");
@@ -367,6 +370,19 @@ export default function SetupDom() {
         opponentContainer.appendChild(opponentSide);
         helperAddGrid(playerField);
         helperAddSides(playerField);
+
+        const infoContainer = document.createElement("div");
+        const firstInfo = document.createElement("div");
+        const secondInfo = document.createElement("div");
+        infoContainer.classList.toggle("infoContainer");
+        firstInfo.classList.toggle("firstInfo");
+        secondInfo.classList.toggle("secondInfo");
+        firstInfo.textContent = "Drag the ships to reposition them.";
+        secondInfo.textContent = "Click the ships to swap directions between horizontal and vertical.";
+        infoContainer.appendChild(firstInfo);
+        infoContainer.appendChild(secondInfo);
+        playerSide.appendChild(infoContainer);
+
 
         const defaultShips = [
             [
@@ -455,6 +471,11 @@ export default function SetupDom() {
 
     }
 
+    const displayEnd = function displayEndOfGame(result) {
+        const gameEndDiv = document.querySelector(".gameEnd");
+        gameEndDiv.textContent = `Game Over. You ${result}.`;
+    }
+
     
 
     const mainContainer = document.querySelector(".mainContainer");
@@ -463,6 +484,9 @@ export default function SetupDom() {
     header.textContent = "Battleship";
     header.classList.toggle("header");
     mainContainer.appendChild(header);
+    const gameEndDiv = document.createElement("div");
+    gameEndDiv.classList.toggle("gameEnd");
+    mainContainer.appendChild(gameEndDiv);
 
     const playZone = document.createElement("div");
     playZone.classList.toggle("playZone");
@@ -493,6 +517,7 @@ export default function SetupDom() {
         allowDrag,
         changeButton,
         createStartScreen,
+        displayEnd,
     }
 
 }

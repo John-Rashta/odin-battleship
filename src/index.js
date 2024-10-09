@@ -43,7 +43,10 @@ const pageLoad = function pageSetupAndManagement() {
                         const hitCoords = domManager.getSquareHit(e.target);
                         const hitRecord = computerPlayer.gameboard.receiveAttack(hitCoords);
                         opponentBoard(computerPlayer);
-                        gameOver = computerPlayer.gameboard.allSunk();
+                        if (computerPlayer.gameboard.allSunk()) {
+                            gameOver = true;
+                            domManager.displayEnd("Won");
+                        }
                         if (hitRecord === "hit" || hitRecord === "sunk") {
                             currentPlayer = realPlayer;
                         } else {
@@ -62,14 +65,20 @@ const pageLoad = function pageSetupAndManagement() {
                                 playerBoard(realPlayer);
                                 lastCoord = newCoord;
                                 hitRecord = newRecord;
-                                gameOver = realPlayer.gameboard.allSunk();
+                                if (realPlayer.gameboard.allSunk()) {
+                                    gameOver = true;
+                                    domManager.displayEnd("Lost");
+                                }
                             } else {
                                 const newCoord = computerPlayer.getRandomCoord(realPlayer.gameboard.getAllHits());
                                 const newRecord = realPlayer.gameboard.receiveAttack(newCoord);
                                 playerBoard(realPlayer);
                                 lastCoord = newCoord;
                                 hitRecord = newRecord;
-                                gameOver = realPlayer.gameboard.allSunk();
+                                if (realPlayer.gameboard.allSunk()) {
+                                    gameOver = true;
+                                    domManager.displayEnd("Lost");
+                                }
                             }
 
                         }

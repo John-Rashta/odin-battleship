@@ -69,16 +69,20 @@ body {
 }
 
 .mainContainer {
+  height: 100%;
   padding: 50px;
   display: flex;
   flex-direction: column;
   gap: 50px;
+  font-family: 'Times New Roman', Times, serif;
+  background-color:rgba(47, 235, 241, 0.15);
 }
 
 .playZone {
   display: flex;
   gap: 100px;
   justify-content: center;
+  user-select: none;
   
 }
 
@@ -94,8 +98,8 @@ body {
 
 .fieldGrid {
     display: grid;
-    width: 500px;
-    height: 500px;
+    min-width: 500px;
+    min-height: 500px;
     grid-template-columns: repeat(10, 1fr);
     grid-template-rows: repeat(10, 1fr);
     gap: 2px;
@@ -132,7 +136,7 @@ body {
 }
 
 .miss {
-  background-color: cyan;
+  background-color: rgb(128, 198, 231);
 }
   
 .sideNumber {
@@ -150,3 +154,47 @@ body {
   top: 60px;
   left: 18px;
 }
+
+.playerSide {
+  display: flex;
+  flex-direction: row;
+  gap: 50px;
+}
+
+.gameEnd {
+  height: 30px;
+  text-align: center;
+  margin-bottom: -40px;
+  user-select: none;
+  font-size: 1.1rem;
+}
+
+.header {
+  text-align: center;
+  font-size: 2.2rem;
+  margin-bottom: 30px;
+}
+
+.startDiv {
+  text-align: center;
+  margin-top: 40px;
+}
+
+.playButton {
+  padding: 7px 15px;
+  font-size: 1.2rem;
+  user-select: none;
+  background-color:rgb(238, 224, 96);
+  border-radius: 10px;
+  border: solid rgb(184, 160, 28);
+}
+
+.sunk {
+  border-color: red;
+  background-color:rgba(255, 0, 0, 0.15);
+}
+
+.infoContainer {
+  font-size: 1.3rem;
+}
+
